@@ -1,0 +1,76 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  DOSEN
+  WD2
+  KAPRODI
+  DEKAN
+  MAHASISWA
+}
+
+enum BookingStatus {
+  PENDING
+  WD2_ACC
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  password  String
+  role      Role
+  prodi     String?
+  nip       String?
+  noHp      String?
+  jabatan   String?
+  avatarUrl String?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  bookings  Booking[]
+}
+
+model AppSettings {
+  id           String   @id @default("singleton")
+  namaInstansi String   @default("Universitas")
+  namaFakultas String   @default("Fakultas Teknik")
+  namaJurusan  String   @default("Teknik Informatika")
+  logoUrl      String?
+  alamat       String?
+  updatedAt    DateTime @updatedAt
+}
+
+model Booking {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  mataKuliah      String
+  prodi           String
+  hari            String
+  jamMulai        DateTime
+  jamSelesai      DateTime
+  mingguMulai     Int
+  mingguSelesai   Int
+  software        String
+  jumlahMahasiswa Int?
+
+  status          BookingStatus @default(PENDING)
+
+  catatanAdmin    String?
+  nomorSurat      String?
+  tanggalSurat    DateTime?
+  catatanWD2      String?
+  createdAt       DateTime @default(now())
+
+  user            User @relation(fields: [userId], references: [id])
+}
