@@ -15,8 +15,13 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Lab Komputer — Sistem Booking",
-  description: "Sistem pemesanan ruang laboratorium komputer",
+  title: 'Sistem Booking Lab Komputer',
+  description: 'Sistem peminjaman laboratorium komputer',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({
