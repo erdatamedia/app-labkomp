@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "isApproved" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "registeredAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP;
