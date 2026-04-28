@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, FormEvent, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
@@ -11,6 +12,7 @@ function LoginForm() {
   const [password, setPassword]               = useState('')
   const [loading, setLoading]                 = useState(false)
   const [error, setError]                     = useState('')
+  const [errorStatus, setErrorStatus]         = useState<number | null>(null)
   const [emailFocused, setEmailFocused]       = useState(false)
   const [passwordFocused, setPasswordFocused] = useState(false)
   const [btnHovered, setBtnHovered]           = useState(false)
@@ -19,6 +21,7 @@ function LoginForm() {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setErrorStatus(null)
 
     const res = await fetch('/api/auth/login', {
       method: 'POST',
@@ -30,6 +33,7 @@ function LoginForm() {
 
     if (!res.ok) {
       setError(data.error ?? 'Login gagal')
+      setErrorStatus(res.status)
       setLoading(false)
       return
     }
@@ -198,13 +202,13 @@ function LoginForm() {
               <div
                 className="animate-fade-up"
                 style={{
-                  background: '#FEF2F2',
-                  border: '1px solid #FECACA',
+                  background: errorStatus === 403 ? '#FFFBEB' : '#FEF2F2',
+                  border: `1px solid ${errorStatus === 403 ? '#FDE68A' : '#FECACA'}`,
                   borderRadius: '8px',
                   padding: '10px 14px',
                   marginBottom: '14px',
                   fontSize: '12px',
-                  color: '#991B1B',
+                  color: errorStatus === 403 ? '#92400E' : '#991B1B',
                 }}
               >
                 {error}
@@ -267,8 +271,14 @@ function LoginForm() {
             </button>
           </form>
 
-          <p style={{ fontSize: '11px', color: 'var(--c-text3)', textAlign: 'center', marginTop: '20px' }}>
+          <p style={{ fontSize: '11px', color: 'var(--c-text3)', textAlign: 'center', marginTop: '16px' }}>
             Lupa password? Hubungi admin lab
+          </p>
+          <p style={{ fontSize: '12px', color: 'var(--c-text3)', textAlign: 'center', marginTop: '10px' }}>
+            Belum punya akun?{' '}
+            <Link href="/register" style={{ color: 'var(--c-blue)', fontWeight: 500, textDecoration: 'none' }}>
+              Daftar sebagai Dosen
+            </Link>
           </p>
         </div>
       </div>

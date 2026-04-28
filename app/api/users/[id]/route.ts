@@ -56,14 +56,15 @@ export async function PATCH(req: Request, { params }: Params) {
   const data: any = {}
 
   if (isAdmin) {
-    if (body.name     !== undefined) data.name     = body.name
-    if (body.email    !== undefined) data.email    = body.email
-    if (body.role     !== undefined) data.role     = body.role
-    if (body.nip      !== undefined) data.nip      = body.nip
-    if (body.prodi    !== undefined) data.prodi    = body.prodi
-    if (body.jabatan  !== undefined) data.jabatan  = body.jabatan
-    if (body.noHp     !== undefined) data.noHp     = body.noHp
-    if (body.isActive !== undefined) data.isActive = body.isActive
+    if (body.name       !== undefined) data.name       = body.name
+    if (body.email      !== undefined) data.email      = body.email
+    if (body.role       !== undefined) data.role       = body.role
+    if (body.nip        !== undefined) data.nip        = body.nip
+    if (body.prodi      !== undefined) data.prodi      = body.prodi
+    if (body.jabatan    !== undefined) data.jabatan    = body.jabatan
+    if (body.noHp       !== undefined) data.noHp       = body.noHp
+    if (body.isActive   !== undefined) data.isActive   = body.isActive
+    if (body.isApproved !== undefined) data.isApproved = body.isApproved
   } else {
     if (body.name !== undefined)    data.name = body.name
     if (body.nip !== undefined)     data.nip = body.nip
@@ -94,6 +95,14 @@ export async function DELETE(_req: Request, { params }: Params) {
 
   if (session.userId === userId) {
     return NextResponse.json({ error: 'Tidak bisa menonaktifkan akun sendiri' }, { status: 400 })
+  }
+
+  const target = await prisma.user.findUnique({ where: { id: userId }, select: { isApproved: true } })
+  if (!target) return NextResponse.json({ error: 'User tidak ditemukan' }, { status: 404 })
+
+  if (!target.isApproved) {
+    await prisma.user.delete({ where: { id: userId } })
+    return NextResponse.json({ message: 'Pendaftaran ditolak' })
   }
 
   const activeBookings = await prisma.booking.count({

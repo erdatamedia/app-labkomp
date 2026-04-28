@@ -8,6 +8,9 @@ type Settings = {
   namaJurusan: string
   logoUrl: string | null
   alamat: string | null
+  namaKepalaLab: string | null
+  nipKepalaLab: string | null
+  jabatanKepalaLab: string | null
 }
 
 type Tab = 'identitas' | 'keamanan'
@@ -38,6 +41,8 @@ export default function AdminSettingsPage() {
   const [tab, setTab] = useState<Tab>('identitas')
   const [settings, setSettings] = useState<Settings | null>(null)
   const [form, setForm] = useState({ namaInstansi: '', namaFakultas: '', namaJurusan: '', alamat: '' })
+  const [kepalaForm, setKepalaForm] = useState({ namaKepalaLab: '', nipKepalaLab: '', jabatanKepalaLab: 'Kepala Laboratorium Komputer' })
+  const [savingKepala, setSavingKepala] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -57,6 +62,11 @@ export default function AdminSettingsPage() {
           namaFakultas: data.namaFakultas ?? '',
           namaJurusan: data.namaJurusan ?? '',
           alamat: data.alamat ?? '',
+        })
+        setKepalaForm({
+          namaKepalaLab: data.namaKepalaLab ?? '',
+          nipKepalaLab: data.nipKepalaLab ?? '',
+          jabatanKepalaLab: data.jabatanKepalaLab ?? 'Kepala Laboratorium Komputer',
         })
       })
   }, [])
@@ -106,6 +116,26 @@ export default function AdminSettingsPage() {
       setToast({ message: err instanceof Error ? err.message : 'Gagal menyimpan', type: 'error' })
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleSaveKepala(e: React.FormEvent) {
+    e.preventDefault()
+    setSavingKepala(true)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(kepalaForm),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? 'Gagal menyimpan')
+      setSettings((prev) => prev ? { ...prev, ...json } : prev)
+      setToast({ message: 'Data kepala lab disimpan', type: 'success' })
+    } catch (err: unknown) {
+      setToast({ message: err instanceof Error ? err.message : 'Gagal menyimpan', type: 'error' })
+    } finally {
+      setSavingKepala(false)
     }
   }
 
@@ -321,6 +351,69 @@ export default function AdminSettingsPage() {
                   }}
                 >
                   {saving ? 'Menyimpan…' : 'Simpan Perubahan'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Kepala Lab card */}
+          <div style={{ background: '#fff', border: '1px solid var(--c-border)', borderRadius: '12px', padding: '24px' }}>
+            <h2 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--c-text)', margin: '0 0 4px' }}>
+              Kepala Laboratorium Komputer
+            </h2>
+            <p style={{ fontSize: '12px', color: 'var(--c-text3)', margin: '0 0 20px' }}>
+              Data ini akan muncul di kolom kanan tanda tangan surat
+            </p>
+
+            <form onSubmit={handleSaveKepala} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>Nama Kepala Lab</label>
+                <input
+                  value={kepalaForm.namaKepalaLab}
+                  onChange={(e) => setKepalaForm((f) => ({ ...f, namaKepalaLab: e.target.value }))}
+                  style={inputStyle}
+                  placeholder="Nama lengkap kepala laboratorium"
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>NIP Kepala Lab</label>
+                <input
+                  value={kepalaForm.nipKepalaLab}
+                  onChange={(e) => setKepalaForm((f) => ({ ...f, nipKepalaLab: e.target.value }))}
+                  style={inputStyle}
+                  placeholder="18 digit NIP"
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Jabatan</label>
+                <input
+                  value={kepalaForm.jabatanKepalaLab}
+                  onChange={(e) => setKepalaForm((f) => ({ ...f, jabatanKepalaLab: e.target.value }))}
+                  style={inputStyle}
+                  placeholder="Kepala Laboratorium Komputer"
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="submit"
+                  disabled={savingKepala}
+                  className="btn-spring"
+                  style={{
+                    background: 'var(--c-blue)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '9px 22px',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    cursor: savingKepala ? 'not-allowed' : 'pointer',
+                    opacity: savingKepala ? 0.7 : 1,
+                  }}
+                >
+                  {savingKepala ? 'Menyimpan…' : 'Simpan'}
                 </button>
               </div>
             </form>

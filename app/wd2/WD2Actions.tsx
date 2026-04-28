@@ -11,11 +11,10 @@ export default function WD2Actions({
   mataKuliah: string
 }) {
   const router = useRouter()
-  const [showModal, setShowModal]   = useState(false)
-  const [nomorSurat, setNomorSurat] = useState('')
-  const [catatan, setCatatan]       = useState('')
-  const [loading, setLoading]       = useState<'acc' | 'reject' | null>(null)
-  const [error, setError]           = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [catatan, setCatatan]     = useState('')
+  const [loading, setLoading]     = useState<'acc' | 'reject' | null>(null)
+  const [error, setError]         = useState('')
 
   async function handleACC() {
     setLoading('acc')
@@ -23,7 +22,7 @@ export default function WD2Actions({
     const res = await fetch(`/api/bookings/${bookingId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'acc', nomorSurat, catatanWD2: catatan }),
+      body: JSON.stringify({ action: 'acc', catatanWD2: catatan }),
     })
     const data = await res.json()
     if (!res.ok) {
@@ -99,27 +98,12 @@ export default function WD2Actions({
           borderRadius: '8px',
           minWidth: '260px',
         }}>
-          <p style={{ fontSize: '12px', fontWeight: 600, color: '#166534', margin: '0 0 10px' }}>
-            ACC: {mataKuliah}
+          <p style={{ fontSize: '12px', fontWeight: 600, color: '#166534', margin: '0 0 2px' }}>
+            Berikan Persetujuan
           </p>
-
-          <div style={{ marginBottom: '8px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 500, color: '#374151', display: 'block', marginBottom: '4px' }}>
-              Nomor Surat <span style={{ color: '#DC2626' }}>*</span>
-            </label>
-            <input
-              value={nomorSurat}
-              onChange={(e) => setNomorSurat(e.target.value)}
-              placeholder="B/XXX/WD2/IV/2025"
-              style={{
-                width: '100%', boxSizing: 'border-box',
-                fontFamily: 'var(--font-mono)', fontSize: '12px',
-                padding: '7px 10px',
-                border: '1px solid #D1D5DB', borderRadius: '8px',
-                outline: 'none', background: '#fff',
-              }}
-            />
-          </div>
+          <p style={{ fontSize: '10px', color: '#4ADE80', margin: '0 0 10px' }}>
+            Nomor surat akan dibuat otomatis
+          </p>
 
           <div style={{ marginBottom: '10px' }}>
             <label style={{ fontSize: '11px', fontWeight: 500, color: '#374151', display: 'block', marginBottom: '4px' }}>
@@ -129,8 +113,8 @@ export default function WD2Actions({
             <textarea
               value={catatan}
               onChange={(e) => setCatatan(e.target.value)}
-              placeholder="Disetujui untuk penggunaan..."
-              rows={2}
+              placeholder="Catatan atau keterangan tambahan..."
+              rows={3}
               style={{
                 width: '100%', boxSizing: 'border-box',
                 fontSize: '12px', fontFamily: 'var(--font-sans)',
@@ -148,13 +132,13 @@ export default function WD2Actions({
           <div style={{ display: 'flex', gap: '6px' }}>
             <button
               onClick={handleACC}
-              disabled={disabled || !nomorSurat.trim()}
+              disabled={disabled}
               style={{
-                background: disabled || !nomorSurat.trim() ? '#93C5FD' : '#2563EB',
+                background: disabled ? '#93C5FD' : '#2563EB',
                 color: '#fff',
                 border: 'none', fontSize: '11px', fontWeight: 600,
                 borderRadius: '6px', padding: '6px 14px',
-                cursor: disabled || !nomorSurat.trim() ? 'not-allowed' : 'pointer',
+                cursor: disabled ? 'not-allowed' : 'pointer',
                 transition: 'background 150ms',
                 fontFamily: 'var(--font-sans)',
               }}

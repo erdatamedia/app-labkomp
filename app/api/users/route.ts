@@ -26,10 +26,18 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url)
   const role = searchParams.get('role')
+  const isApprovedParam = searchParams.get('isApproved')
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const where: any = {}
   if (role) where.role = role
+
+  if (isApprovedParam === 'false') {
+    where.isApproved = false
+    where.isActive = true
+  } else {
+    where.isApproved = true
+  }
 
   const users = await prisma.user.findMany({ where, select: USER_SELECT, orderBy: { createdAt: 'desc' } })
   return NextResponse.json(users)
@@ -59,7 +67,7 @@ export async function POST(req: Request) {
 
   const hashed = await bcrypt.hash(password, 10)
   const user = await prisma.user.create({
-    data: { name, email, password: hashed, role, nip, prodi, jabatan, noHp },
+    data: { name, email, password: hashed, role, nip, prodi, jabatan, noHp, isApproved: true },
     select: USER_SELECT,
   })
 

@@ -19,26 +19,26 @@ async function main() {
   // ── Users (upsert by email) ─────────────────────────────────────────
   await prisma.user.upsert({
     where:  { email: "admin@lab.com" },
-    update: { name: "Admin Lab", password: hashAdmin, role: Role.ADMIN, nip: "197801012005011001", jabatan: "Kepala Laboratorium Komputer" },
-    create: { name: "Admin Lab", email: "admin@lab.com", password: hashAdmin, role: Role.ADMIN, nip: "197801012005011001", jabatan: "Kepala Laboratorium Komputer" },
+    update: { name: "Admin Lab", password: hashAdmin, role: Role.ADMIN, nip: "197801012005011001", jabatan: "Kepala Laboratorium Komputer", isApproved: true },
+    create: { name: "Admin Lab", email: "admin@lab.com", password: hashAdmin, role: Role.ADMIN, nip: "197801012005011001", jabatan: "Kepala Laboratorium Komputer", isApproved: true },
   })
 
   const budi = await prisma.user.upsert({
     where:  { email: "budi@lab.com" },
-    update: { name: "Dr. Budi Santoso", password: hashDosen, role: Role.DOSEN, nip: "198503152010011002", prodi: "Informatika", noHp: "08123456789" },
-    create: { name: "Dr. Budi Santoso", email: "budi@lab.com", password: hashDosen, role: Role.DOSEN, nip: "198503152010011002", prodi: "Informatika", noHp: "08123456789" },
+    update: { name: "Dr. Budi Santoso", password: hashDosen, role: Role.DOSEN, nip: "198503152010011002", prodi: "Informatika", noHp: "08123456789", isApproved: true },
+    create: { name: "Dr. Budi Santoso", email: "budi@lab.com", password: hashDosen, role: Role.DOSEN, nip: "198503152010011002", prodi: "Informatika", noHp: "08123456789", isApproved: true },
   })
 
   const siti = await prisma.user.upsert({
     where:  { email: "siti@lab.com" },
-    update: { name: "Dr. Siti Rahayu", password: hashDosen, role: Role.DOSEN, nip: "199001202015012003", prodi: "Sistem Informasi", noHp: "08234567890" },
-    create: { name: "Dr. Siti Rahayu", email: "siti@lab.com", password: hashDosen, role: Role.DOSEN, nip: "199001202015012003", prodi: "Sistem Informasi", noHp: "08234567890" },
+    update: { name: "Dr. Siti Rahayu", password: hashDosen, role: Role.DOSEN, nip: "199001202015012003", prodi: "Sistem Informasi", noHp: "08234567890", isApproved: true },
+    create: { name: "Dr. Siti Rahayu", email: "siti@lab.com", password: hashDosen, role: Role.DOSEN, nip: "199001202015012003", prodi: "Sistem Informasi", noHp: "08234567890", isApproved: true },
   })
 
   await prisma.user.upsert({
     where:  { email: "wd2@lab.com" },
-    update: { name: "Dr. Ahmad Fauzi, M.T.", password: hashWD2, role: Role.WD2, nip: "197605102003121001", jabatan: "Wakil Dekan II Bidang Sumber Daya", noHp: "08345678901" },
-    create: { name: "Dr. Ahmad Fauzi, M.T.", email: "wd2@lab.com", password: hashWD2, role: Role.WD2, nip: "197605102003121001", jabatan: "Wakil Dekan II Bidang Sumber Daya", noHp: "08345678901" },
+    update: { name: "Dr. Ahmad Fauzi, M.T.", password: hashWD2, role: Role.WD2, nip: "197605102003121001", jabatan: "Wakil Dekan II Bidang Sumber Daya", noHp: "08345678901", isApproved: true },
+    create: { name: "Dr. Ahmad Fauzi, M.T.", email: "wd2@lab.com", password: hashWD2, role: Role.WD2, nip: "197605102003121001", jabatan: "Wakil Dekan II Bidang Sumber Daya", noHp: "08345678901", isApproved: true },
   })
 
   // ── AppSettings singleton ───────────────────────────────────────────

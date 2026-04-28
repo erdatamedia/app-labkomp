@@ -16,6 +16,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Email atau password salah' }, { status: 401 })
   }
 
+  if (!user.isApproved) {
+    return NextResponse.json(
+      { error: 'Akun Anda belum disetujui admin. Silakan tunggu konfirmasi.' },
+      { status: 403 }
+    )
+  }
+
   await createSession({
     userId: user.id,
     role: user.role,

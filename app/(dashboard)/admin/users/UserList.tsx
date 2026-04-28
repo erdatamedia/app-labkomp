@@ -18,25 +18,34 @@ type User = {
   createdAt: Date | string
 }
 
-type FilterTab = 'SEMUA' | 'DOSEN' | 'WD2' | 'ADMIN'
+type PendingUser = {
+  id: number
+  name: string
+  email: string
+  prodi: string | null
+  nip: string | null
+  registeredAt: Date | string | null
+}
+
+type FilterTab = 'SEMUA' | 'DOSEN' | 'WD2' | 'ADMIN' | 'MENUNGGU'
 
 // ── Styles ────────────────────────────────────────────────────────────
 
 const roleBadge: Record<string, React.CSSProperties> = {
-  ADMIN:   { background: '#DBEAFE', color: '#1E40AF' },
-  DOSEN:   { background: '#DCFCE7', color: '#166534' },
-  WD2:     { background: '#EEF2FF', color: '#3730A3' },
-  KAPRODI: { background: '#DCFCE7', color: '#166534' },
-  DEKAN:   { background: '#FEF3C7', color: '#92400E' },
+  ADMIN:     { background: '#DBEAFE', color: '#1E40AF' },
+  DOSEN:     { background: '#DCFCE7', color: '#166534' },
+  WD2:       { background: '#EEF2FF', color: '#3730A3' },
+  KAPRODI:   { background: '#DCFCE7', color: '#166534' },
+  DEKAN:     { background: '#FEF3C7', color: '#92400E' },
   MAHASISWA: { background: '#F1F5F9', color: '#475569' },
 }
 
 const avatarColor: Record<string, React.CSSProperties> = {
-  ADMIN:   { background: '#DBEAFE', color: '#1E40AF' },
-  DOSEN:   { background: '#DCFCE7', color: '#166534' },
-  WD2:     { background: '#EEF2FF', color: '#3730A3' },
-  KAPRODI: { background: '#DCFCE7', color: '#166534' },
-  DEKAN:   { background: '#FEF3C7', color: '#92400E' },
+  ADMIN:     { background: '#DBEAFE', color: '#1E40AF' },
+  DOSEN:     { background: '#DCFCE7', color: '#166534' },
+  WD2:       { background: '#EEF2FF', color: '#3730A3' },
+  KAPRODI:   { background: '#DCFCE7', color: '#166534' },
+  DEKAN:     { background: '#FEF3C7', color: '#92400E' },
   MAHASISWA: { background: '#F1F5F9', color: '#475569' },
 }
 
@@ -69,6 +78,12 @@ function getInitials(name: string) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
+function formatDate(val: Date | string | null) {
+  if (!val) return '—'
+  const d = new Date(val)
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
 // ── Toast ─────────────────────────────────────────────────────────────
 
 function Toast({ message, type, onDone }: { message: string; type: 'success' | 'error'; onDone: () => void }) {
@@ -87,7 +102,7 @@ function Toast({ message, type, onDone }: { message: string; type: 'success' | '
   )
 }
 
-// ── Confirm dialog ────────────────────────────────────────────────────
+// ── Confirm deactivate dialog ─────────────────────────────────────────
 
 function ConfirmModal({ name, onConfirm, onCancel, loading }: {
   name: string; onConfirm: () => void; onCancel: () => void; loading: boolean
@@ -105,6 +120,31 @@ function ConfirmModal({ name, onConfirm, onCancel, loading }: {
           </button>
           <button onClick={onConfirm} disabled={loading} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'var(--c-red)', color: '#fff', fontSize: '13px', fontWeight: 500, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}>
             {loading ? 'Memproses…' : 'Ya, Nonaktifkan'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Confirm reject dialog ─────────────────────────────────────────────
+
+function RejectConfirmModal({ name, onConfirm, onCancel, loading }: {
+  name: string; onConfirm: () => void; onCancel: () => void; loading: boolean
+}) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15,23,42,0.5)' }}>
+      <div style={{ background: '#fff', borderRadius: '14px', padding: '28px', maxWidth: '380px', width: '90%', boxShadow: '0 20px 40px rgba(0,0,0,0.15)' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--c-text)', margin: '0 0 10px' }}>Tolak Pendaftaran?</h3>
+        <p style={{ fontSize: '13px', color: 'var(--c-text2)', margin: '0 0 20px' }}>
+          Pendaftaran <strong>{name}</strong> akan ditolak dan data akan dihapus permanen.
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+          <button onClick={onCancel} disabled={loading} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--c-border)', background: '#fff', fontSize: '13px', cursor: 'pointer', color: 'var(--c-text2)' }}>
+            Batal
+          </button>
+          <button onClick={onConfirm} disabled={loading} style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: 'var(--c-red)', color: '#fff', fontSize: '13px', fontWeight: 500, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}>
+            {loading ? 'Memproses…' : 'Ya, Tolak'}
           </button>
         </div>
       </div>
@@ -291,14 +331,22 @@ function UserModal({ mode, initial, onClose, onSuccess }: {
 
 // ── Main Component ────────────────────────────────────────────────────
 
-export default function UserList({ initialUsers }: { initialUsers: User[] }) {
+export default function UserList({
+  initialUsers,
+  pendingUsers: initialPendingUsers,
+}: {
+  initialUsers: User[]
+  pendingUsers: PendingUser[]
+}) {
   const router = useRouter()
   const [users, setUsers] = useState<User[]>(initialUsers)
+  const [pendingUsers, setPendingUsers] = useState<PendingUser[]>(initialPendingUsers)
   const [tab, setTab] = useState<FilterTab>('SEMUA')
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [showAdd, setShowAdd] = useState(false)
   const [editUser, setEditUser] = useState<User | null>(null)
   const [confirmUser, setConfirmUser] = useState<User | null>(null)
+  const [rejectUser, setRejectUser] = useState<PendingUser | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
 
   const filtered = tab === 'SEMUA' ? users : users.filter((u) => u.role === tab)
@@ -350,11 +398,51 @@ export default function UserList({ initialUsers }: { initialUsers: User[] }) {
     }
   }
 
+  async function handleApprove(pending: PendingUser) {
+    setActionLoading(true)
+    try {
+      const res = await fetch(`/api/users/${pending.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isApproved: true }),
+      })
+      if (!res.ok) { showToast('Gagal menyetujui pendaftaran', 'error'); return }
+      setPendingUsers((prev) => prev.filter((u) => u.id !== pending.id))
+      fetch('/api/users')
+        .then((r) => r.json())
+        .then((data: User[]) => setUsers(data))
+        .catch(() => {})
+      showToast(`${pending.name} berhasil disetujui`)
+    } catch {
+      showToast('Terjadi kesalahan', 'error')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  async function handleReject() {
+    if (!rejectUser) return
+    setActionLoading(true)
+    try {
+      const res = await fetch(`/api/users/${rejectUser.id}`, { method: 'DELETE' })
+      const json = await res.json()
+      if (!res.ok) { showToast(json.error ?? 'Gagal menolak', 'error'); return }
+      setPendingUsers((prev) => prev.filter((u) => u.id !== rejectUser.id))
+      showToast(`Pendaftaran ${rejectUser.name} ditolak`)
+    } catch {
+      showToast('Terjadi kesalahan', 'error')
+    } finally {
+      setActionLoading(false)
+      setRejectUser(null)
+    }
+  }
+
   const tabItems: { key: FilterTab; label: string }[] = [
-    { key: 'SEMUA', label: 'Semua' },
-    { key: 'DOSEN', label: 'Dosen' },
-    { key: 'WD2',   label: 'WD2' },
-    { key: 'ADMIN', label: 'Admin' },
+    { key: 'SEMUA',    label: 'Semua' },
+    { key: 'DOSEN',    label: 'Dosen' },
+    { key: 'WD2',      label: 'WD2' },
+    { key: 'ADMIN',    label: 'Admin' },
+    { key: 'MENUNGGU', label: 'Menunggu Persetujuan' },
   ]
 
   return (
@@ -365,6 +453,14 @@ export default function UserList({ initialUsers }: { initialUsers: User[] }) {
           name={confirmUser.name}
           onConfirm={handleDeactivate}
           onCancel={() => setConfirmUser(null)}
+          loading={actionLoading}
+        />
+      )}
+      {rejectUser && (
+        <RejectConfirmModal
+          name={rejectUser.name}
+          onConfirm={handleReject}
+          onCancel={() => setRejectUser(null)}
           loading={actionLoading}
         />
       )}
@@ -383,6 +479,11 @@ export default function UserList({ initialUsers }: { initialUsers: User[] }) {
           </h1>
           <p style={{ fontSize: '12px', color: 'var(--c-text3)', margin: 0, fontFamily: 'var(--font-mono)' }}>
             {users.length} pengguna terdaftar
+            {pendingUsers.length > 0 && (
+              <span style={{ marginLeft: '8px', color: '#DC2626', fontWeight: 600 }}>
+                · {pendingUsers.length} menunggu persetujuan
+              </span>
+            )}
           </p>
         </div>
         <button
@@ -399,132 +500,229 @@ export default function UserList({ initialUsers }: { initialUsers: User[] }) {
 
       {/* Filter tabs */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '16px', background: '#F8FAFC', borderRadius: '10px', padding: '4px', width: 'fit-content' }}>
-        {tabItems.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            style={{
-              padding: '7px 16px', fontSize: '13px', border: 'none', borderRadius: '7px', cursor: 'pointer',
-              fontWeight: tab === key ? 600 : 400,
-              color: tab === key ? 'var(--c-blue)' : 'var(--c-text2)',
-              background: tab === key ? '#EFF6FF' : 'transparent',
-              transition: 'all 150ms',
-            }}
-          >
-            {label}
-            <span style={{ marginLeft: '6px', fontSize: '11px', color: tab === key ? 'var(--c-blue)' : 'var(--c-text3)', fontFamily: 'var(--font-mono)' }}>
-              {key === 'SEMUA' ? users.length : users.filter((u) => u.role === key).length}
-            </span>
-          </button>
-        ))}
+        {tabItems.map(({ key, label }) => {
+          const count = key === 'SEMUA' ? users.length
+            : key === 'MENUNGGU' ? pendingUsers.length
+            : users.filter((u) => u.role === key).length
+
+          return (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              style={{
+                padding: '7px 16px', fontSize: '13px', border: 'none', borderRadius: '7px', cursor: 'pointer',
+                fontWeight: tab === key ? 600 : 400,
+                color: tab === key ? (key === 'MENUNGGU' ? '#92400E' : 'var(--c-blue)') : 'var(--c-text2)',
+                background: tab === key ? (key === 'MENUNGGU' ? '#FFFBEB' : '#EFF6FF') : 'transparent',
+                transition: 'all 150ms',
+                position: 'relative' as const,
+              }}
+            >
+              {label}
+              <span style={{
+                marginLeft: '6px', fontSize: '11px', fontFamily: 'var(--font-mono)',
+                color: tab === key
+                  ? (key === 'MENUNGGU' ? '#B45309' : 'var(--c-blue)')
+                  : 'var(--c-text3)',
+              }}>
+                {count}
+              </span>
+              {key === 'MENUNGGU' && pendingUsers.length > 0 && tab !== 'MENUNGGU' && (
+                <span style={{
+                  position: 'absolute', top: '6px', right: '6px',
+                  width: '6px', height: '6px', borderRadius: '50%',
+                  background: '#DC2626',
+                }} />
+              )}
+            </button>
+          )
+        })}
       </div>
 
-      {/* Table */}
-      <div style={{ background: '#fff', border: '1px solid var(--c-border)', borderRadius: '12px', overflow: 'hidden' }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                {['Nama', 'Email', 'Role', 'NIP', 'Prodi / Jabatan', 'Status', 'Aksi'].map((h) => (
-                  <th key={h} style={thStyle}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
+      {/* Pending Approval Table */}
+      {tab === 'MENUNGGU' && (
+        <div style={{ background: '#fff', border: '1px solid #FDE68A', borderRadius: '12px', overflow: 'hidden' }}>
+          <div style={{ padding: '12px 16px', background: '#FFFBEB', borderBottom: '1px solid #FDE68A', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                stroke="#92400E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span style={{ fontSize: '12px', color: '#92400E', fontWeight: 500 }}>
+              {pendingUsers.length} dosen menunggu persetujuan pendaftaran
+            </span>
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
                 <tr>
-                  <td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: 'var(--c-text3)', fontSize: '13px' }}>
-                    Tidak ada pengguna ditemukan
-                  </td>
+                  {['Nama', 'Email', 'Prodi', 'NIP', 'Tgl Daftar', 'Aksi'].map((h) => (
+                    <th key={h} style={thStyle}>{h}</th>
+                  ))}
                 </tr>
-              ) : (
-                filtered.map((u) => (
-                  <tr key={u.id} className="admin-row">
-                    {/* Nama */}
-                    <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{
-                          width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '10px', fontWeight: 700, fontFamily: 'var(--font-mono)',
-                          ...avatarColor[u.role],
-                        }}>
-                          {getInitials(u.name)}
-                        </div>
-                        <span style={{ fontWeight: 500, color: 'var(--c-text)', fontSize: '13px' }}>{u.name}</span>
-                      </div>
-                    </td>
-                    {/* Email */}
-                    <td style={{ ...tdStyle, color: 'var(--c-text2)' }}>{u.email}</td>
-                    {/* Role */}
-                    <td style={tdStyle}>
-                      <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, letterSpacing: '0.03em', ...roleBadge[u.role] }}>
-                        {u.role}
-                      </span>
-                    </td>
-                    {/* NIP */}
-                    <td style={{ ...tdStyle, fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--c-text3)' }}>
-                      {u.nip ?? '—'}
-                    </td>
-                    {/* Prodi / Jabatan */}
-                    <td style={tdStyle}>{u.prodi ?? u.jabatan ?? '—'}</td>
-                    {/* Status */}
-                    <td style={tdStyle}>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '5px',
-                        padding: '2px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 500,
-                        background: u.isActive ? '#DCFCE7' : '#F1F5F9',
-                        color: u.isActive ? '#166534' : '#64748B',
-                      }}>
-                        <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: u.isActive ? '#22C55E' : '#94A3B8', display: 'inline-block' }} />
-                        {u.isActive ? 'Aktif' : 'Nonaktif'}
-                      </span>
-                    </td>
-                    {/* Aksi */}
-                    <td style={tdStyle}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <button
-                          onClick={() => setEditUser(u)}
-                          style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid var(--c-border)', background: '#fff', fontSize: '12px', cursor: 'pointer', color: 'var(--c-text2)', transition: 'all 120ms', whiteSpace: 'nowrap' }}
-                          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--c-blue)'; e.currentTarget.style.color = 'var(--c-blue)' }}
-                          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-text2)' }}
-                        >
-                          Edit
-                        </button>
-                        {u.isActive ? (
-                          <button
-                            onClick={() => setConfirmUser(u)}
-                            style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #FECACA', background: '#FEF2F2', fontSize: '12px', cursor: 'pointer', color: '#DC2626', transition: 'all 120ms', whiteSpace: 'nowrap' }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = '#FEE2E2' }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = '#FEF2F2' }}
-                          >
-                            Nonaktifkan
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleActivate(u)}
-                            style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #A7F3D0', background: '#ECFDF5', fontSize: '12px', cursor: 'pointer', color: '#059669', transition: 'all 120ms', whiteSpace: 'nowrap' }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = '#D1FAE5' }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = '#ECFDF5' }}
-                          >
-                            Aktifkan
-                          </button>
-                        )}
-                      </div>
+              </thead>
+              <tbody>
+                {pendingUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ padding: '40px', textAlign: 'center', color: 'var(--c-text3)', fontSize: '13px' }}>
+                      Tidak ada pendaftaran yang menunggu
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {filtered.length > 0 && (
-          <div style={{ padding: '10px 16px', borderTop: '1px solid var(--c-border)', fontSize: '11px', color: 'var(--c-text3)', fontFamily: 'var(--font-mono)' }}>
-            {filtered.length} pengguna ditampilkan{tab !== 'SEMUA' && ` · filter: ${tab}`}
+                ) : (
+                  pendingUsers.map((u) => (
+                    <tr key={u.id} className="admin-row">
+                      <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div style={{
+                            width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '10px', fontWeight: 700, fontFamily: 'var(--font-mono)',
+                            background: '#FEF3C7', color: '#92400E',
+                          }}>
+                            {getInitials(u.name)}
+                          </div>
+                          <span style={{ fontWeight: 500, color: 'var(--c-text)', fontSize: '13px' }}>{u.name}</span>
+                        </div>
+                      </td>
+                      <td style={{ ...tdStyle, color: 'var(--c-text2)' }}>{u.email}</td>
+                      <td style={tdStyle}>{u.prodi ?? '—'}</td>
+                      <td style={{ ...tdStyle, fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--c-text3)' }}>
+                        {u.nip ?? '—'}
+                      </td>
+                      <td style={{ ...tdStyle, fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--c-text3)' }}>
+                        {formatDate(u.registeredAt)}
+                      </td>
+                      <td style={tdStyle}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <button
+                            onClick={() => handleApprove(u)}
+                            disabled={actionLoading}
+                            style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #A7F3D0', background: '#ECFDF5', fontSize: '12px', cursor: actionLoading ? 'not-allowed' : 'pointer', color: '#059669', transition: 'all 120ms', whiteSpace: 'nowrap', fontWeight: 500, opacity: actionLoading ? 0.6 : 1 }}
+                            onMouseEnter={(e) => { if (!actionLoading) e.currentTarget.style.background = '#D1FAE5' }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = '#ECFDF5' }}
+                          >
+                            Setujui
+                          </button>
+                          <button
+                            onClick={() => setRejectUser(u)}
+                            disabled={actionLoading}
+                            style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #FECACA', background: '#FEF2F2', fontSize: '12px', cursor: actionLoading ? 'not-allowed' : 'pointer', color: '#DC2626', transition: 'all 120ms', whiteSpace: 'nowrap', fontWeight: 500, opacity: actionLoading ? 0.6 : 1 }}
+                            onMouseEnter={(e) => { if (!actionLoading) e.currentTarget.style.background = '#FEE2E2' }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = '#FEF2F2' }}
+                          >
+                            Tolak
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Regular Users Table */}
+      {tab !== 'MENUNGGU' && (
+        <div style={{ background: '#fff', border: '1px solid var(--c-border)', borderRadius: '12px', overflow: 'hidden' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  {['Nama', 'Email', 'Role', 'NIP', 'Prodi / Jabatan', 'Status', 'Aksi'].map((h) => (
+                    <th key={h} style={thStyle}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: 'var(--c-text3)', fontSize: '13px' }}>
+                      Tidak ada pengguna ditemukan
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((u) => (
+                    <tr key={u.id} className="admin-row">
+                      <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div style={{
+                            width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '10px', fontWeight: 700, fontFamily: 'var(--font-mono)',
+                            ...avatarColor[u.role],
+                          }}>
+                            {getInitials(u.name)}
+                          </div>
+                          <span style={{ fontWeight: 500, color: 'var(--c-text)', fontSize: '13px' }}>{u.name}</span>
+                        </div>
+                      </td>
+                      <td style={{ ...tdStyle, color: 'var(--c-text2)' }}>{u.email}</td>
+                      <td style={tdStyle}>
+                        <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, letterSpacing: '0.03em', ...roleBadge[u.role] }}>
+                          {u.role}
+                        </span>
+                      </td>
+                      <td style={{ ...tdStyle, fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--c-text3)' }}>
+                        {u.nip ?? '—'}
+                      </td>
+                      <td style={tdStyle}>{u.prodi ?? u.jabatan ?? '—'}</td>
+                      <td style={tdStyle}>
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '5px',
+                          padding: '2px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 500,
+                          background: u.isActive ? '#DCFCE7' : '#F1F5F9',
+                          color: u.isActive ? '#166534' : '#64748B',
+                        }}>
+                          <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: u.isActive ? '#22C55E' : '#94A3B8', display: 'inline-block' }} />
+                          {u.isActive ? 'Aktif' : 'Nonaktif'}
+                        </span>
+                      </td>
+                      <td style={tdStyle}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <button
+                            onClick={() => setEditUser(u)}
+                            style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid var(--c-border)', background: '#fff', fontSize: '12px', cursor: 'pointer', color: 'var(--c-text2)', transition: 'all 120ms', whiteSpace: 'nowrap' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--c-blue)'; e.currentTarget.style.color = 'var(--c-blue)' }}
+                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--c-border)'; e.currentTarget.style.color = 'var(--c-text2)' }}
+                          >
+                            Edit
+                          </button>
+                          {u.isActive ? (
+                            <button
+                              onClick={() => setConfirmUser(u)}
+                              style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #FECACA', background: '#FEF2F2', fontSize: '12px', cursor: 'pointer', color: '#DC2626', transition: 'all 120ms', whiteSpace: 'nowrap' }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = '#FEE2E2' }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = '#FEF2F2' }}
+                            >
+                              Nonaktifkan
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleActivate(u)}
+                              style={{ padding: '5px 12px', borderRadius: '6px', border: '1px solid #A7F3D0', background: '#ECFDF5', fontSize: '12px', cursor: 'pointer', color: '#059669', transition: 'all 120ms', whiteSpace: 'nowrap' }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = '#D1FAE5' }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = '#ECFDF5' }}
+                            >
+                              Aktifkan
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {filtered.length > 0 && (
+            <div style={{ padding: '10px 16px', borderTop: '1px solid var(--c-border)', fontSize: '11px', color: 'var(--c-text3)', fontFamily: 'var(--font-mono)' }}>
+              {filtered.length} pengguna ditampilkan{tab !== 'SEMUA' && ` · filter: ${tab}`}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

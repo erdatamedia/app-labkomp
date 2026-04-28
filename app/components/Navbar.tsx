@@ -57,7 +57,7 @@ const navByRole: Record<string, { href: string; label: string }[]> = {
   ],
 }
 
-function NavLink({ href, label, isActive }: { href: string; label: string; isActive: boolean }) {
+function NavLink({ href, label, isActive, badge }: { href: string; label: string; isActive: boolean; badge?: number }) {
   const [hovered, setHovered] = useState(false)
 
   return (
@@ -78,9 +78,24 @@ function NavLink({ href, label, isActive }: { href: string; label: string; isAct
           : hovered
           ? 'rgba(255,255,255,0.07)'
           : 'transparent',
+        position: 'relative',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
       }}
     >
       {label}
+      {badge != null && badge > 0 && (
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          minWidth: '16px', height: '16px', borderRadius: '8px',
+          background: '#DC2626', color: '#fff',
+          fontSize: '10px', fontWeight: 700, lineHeight: 1,
+          padding: '0 4px',
+        }}>
+          {badge}
+        </span>
+      )}
     </Link>
   )
 }
@@ -104,6 +119,7 @@ export default function Navbar({ user }: { user: NavbarUser }) {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({ namaInstansi: 'LabKomp', logoUrl: null })
   const [logoVer, setLogoVer] = useState(0)
+  const [pendingCount, setPendingCount] = useState(0)
 
   useEffect(() => {
     fetch('/api/settings')
@@ -111,6 +127,14 @@ export default function Navbar({ user }: { user: NavbarUser }) {
       .then((data: SiteSettings) => setSiteSettings(data))
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (user.role !== 'ADMIN') return
+    fetch('/api/users?isApproved=false')
+      .then((r) => r.json())
+      .then((data: unknown[]) => setPendingCount(Array.isArray(data) ? data.length : 0))
+      .catch(() => {})
+  }, [user.role])
 
   useEffect(() => {
     function onLogoUpdated(e: Event) {
@@ -224,6 +248,7 @@ export default function Navbar({ user }: { user: NavbarUser }) {
               pathname === link.href ||
               (link.href !== '/' && pathname.startsWith(link.href + '/'))
             }
+            badge={link.href === '/admin/users' ? pendingCount : undefined}
           />
         ))}
       </div>

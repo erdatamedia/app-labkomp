@@ -27,7 +27,7 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
   const session = await getSessionFromRequest(req)
 
-  if (pathname.startsWith('/login')) {
+  if (pathname.startsWith('/login') || pathname.startsWith('/register')) {
     if (session) return NextResponse.redirect(new URL(roleHome(session.role), req.url))
     return NextResponse.next()
   }
@@ -67,5 +67,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/login', '/profile/:path*', '/profile', '/wd2/:path*', '/booking/:path*', '/dosen/:path*', '/admin/:path*'],
+  matcher: ['/login', '/register', '/profile/:path*', '/profile', '/wd2/:path*', '/booking/:path*', '/dosen/:path*', '/admin/:path*'],
 }
