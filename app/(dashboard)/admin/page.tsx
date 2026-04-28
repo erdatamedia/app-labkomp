@@ -1,3 +1,4 @@
+import type { Booking } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/session'
 import StatusBadge from '@/app/components/StatusBadge'
@@ -74,7 +75,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
     }),
   ])
 
-  const approved = allApproved.filter((b) => {
+  const approved = (allApproved as Booking[]).filter((b) => {
     if (filterHari   && b.hari !== filterHari) return false
     if (filterMinggu && b.mingguMulai !== Number(filterMinggu)) return false
     return true
