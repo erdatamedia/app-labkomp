@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/session'
+import { generateNomorSurat } from '@/lib/nomorSurat'
 import { NextResponse } from 'next/server'
 
 export async function PATCH(
@@ -12,7 +13,7 @@ export async function PATCH(
   const { id } = await params
   const bookingId = Number(id)
   const body = await req.json()
-  const { action, nomorSurat, catatanWD2 } = body
+  const { action, catatanWD2 } = body
 
   // ── WD2 ───────────────────────────────────────────────────────────────
   if (session.role === 'WD2') {
@@ -23,16 +24,19 @@ export async function PATCH(
     }
 
     if (action === 'acc') {
-      if (!nomorSurat?.trim()) {
-        return NextResponse.json({ error: 'Nomor surat wajib diisi' }, { status: 400 })
-      }
+      const nomorSurat = await generateNomorSurat(
+        booking.prodi,
+        booking.jenisKegiatan,
+        booking.namaLab,
+      )
       const updated = await prisma.booking.update({
         where: { id: bookingId },
         data: {
           status: 'WD2_ACC',
-          nomorSurat: nomorSurat.trim(),
+          nomorSurat,
           tanggalSurat: new Date(),
           catatanWD2: catatanWD2 ?? null,
+          isTTE: true,
         },
       })
       return NextResponse.json(updated)

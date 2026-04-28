@@ -44,6 +44,8 @@ export async function POST(req: Request) {
     mingguMulai,
     recurring,
     totalMinggu,
+    jenisKegiatan,
+    namaLab,
   } = body
 
   const jamMulaiDate = new Date(`1970-01-01T${jamMulai}:00`)
@@ -91,6 +93,8 @@ export async function POST(req: Request) {
         mingguSelesai: w,
         software,
         jumlahMahasiswa: jumlahMahasiswa ? Number(jumlahMahasiswa) : null,
+        jenisKegiatan: jenisKegiatan ?? 'KUL',
+        namaLab: namaLab ?? 'Laboratorium Komputer',
         status: 'PENDING' as const,
       })),
     })
@@ -132,6 +136,8 @@ export async function POST(req: Request) {
       mingguSelesai: startWeek,
       software,
       jumlahMahasiswa: jumlahMahasiswa ? Number(jumlahMahasiswa) : null,
+      jenisKegiatan: jenisKegiatan ?? 'KUL',
+      namaLab: namaLab ?? 'Laboratorium Komputer',
       status: 'PENDING',
     },
   })

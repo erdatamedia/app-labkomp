@@ -34,21 +34,26 @@ model User {
   noHp      String?
   jabatan   String?
   avatarUrl String?
-  isActive  Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
+  isActive     Boolean   @default(true)
+  isApproved   Boolean   @default(false)
+  registeredAt DateTime? @default(now())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime? @updatedAt
 
   bookings  Booking[]
 }
 
 model AppSettings {
-  id           String   @id @default("singleton")
-  namaInstansi String   @default("Universitas")
-  namaFakultas String   @default("Fakultas Teknik")
-  namaJurusan  String   @default("Teknik Informatika")
-  logoUrl      String?
-  alamat       String?
-  updatedAt    DateTime @updatedAt
+  id               String   @id @default("singleton")
+  namaInstansi     String   @default("Universitas")
+  namaFakultas     String   @default("Fakultas Teknik")
+  namaJurusan      String   @default("Teknik Informatika")
+  logoUrl          String?
+  alamat           String?
+  namaKepalaLab    String?
+  nipKepalaLab     String?
+  jabatanKepalaLab String?  @default("Kepala Laboratorium Komputer")
+  updatedAt        DateTime @updatedAt
 }
 
 model Booking {
@@ -64,12 +69,15 @@ model Booking {
   software        String
   jumlahMahasiswa Int?
 
+  jenisKegiatan   String   @default("KUL")
+  namaLab         String   @default("Laboratorium Komputer")
   status          BookingStatus @default(PENDING)
 
   catatanAdmin    String?
   nomorSurat      String?
   tanggalSurat    DateTime?
   catatanWD2      String?
+  isTTE           Boolean  @default(false)
   createdAt       DateTime @default(now())
 
   user            User @relation(fields: [userId], references: [id])

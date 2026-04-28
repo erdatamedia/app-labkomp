@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
+import { prisma } from '@/lib/prisma'
 
 const inter = Inter({
   variable: "--font-inter",
@@ -14,14 +15,25 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 })
 
-export const metadata: Metadata = {
-  title: 'Sistem Booking Lab Komputer',
-  description: 'Sistem peminjaman laboratorium komputer',
-  icons: {
-    icon: '/favicon.svg',
-    shortcut: '/favicon.svg',
-    apple: '/favicon.svg',
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await prisma.appSettings.findUnique({
+    where: { id: 'singleton' },
+    select: { logoUrl: true, namaInstansi: true },
+  })
+
+  const faviconUrl = settings?.logoUrl ?? '/favicon.svg'
+
+  return {
+    title: settings?.namaInstansi
+      ? `Sistem Booking Lab — ${settings.namaInstansi}`
+      : 'Sistem Booking Lab Komputer',
+    description: 'Sistem peminjaman laboratorium komputer',
+    icons: {
+      icon: faviconUrl,
+      shortcut: faviconUrl,
+      apple: faviconUrl,
+    },
+  }
 }
 
 export default function RootLayout({

@@ -18,6 +18,21 @@ const JAM_SELESAI = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00','15
 const HARI_LIST   = ['Senin','Selasa','Rabu','Kamis','Jumat']
 const STEP_LABELS = ['Detail', 'Jadwal', 'Konfirmasi']
 
+const JENIS_KEGIATAN = [
+  { kode: 'KUL', label: 'KUL – Perkuliahan Rutin' },
+  { kode: 'INS', label: 'INS – Insidental' },
+  { kode: 'PNL', label: 'PNL – Penelitian' },
+]
+
+const NAMA_LAB_LIST = [
+  'Laboratorium Komputer',
+  'Laboratorium Struktur',
+  'Laboratorium Hidrolika',
+  'Laboratorium Manufaktur',
+  'Laboratorium Kendali',
+  'Laboratorium Sistem Tenaga',
+]
+
 // ── Shared styles ─────────────────────────────────────────────────────
 
 const labelStyle: React.CSSProperties = {
@@ -144,12 +159,14 @@ export default function BookingForm({ userName }: { userName: string }) {
   const [toast, setToast]         = useState<ToastData | null>(null)
 
   // Step 1
-  const [mataKuliah, setMataKuliah]       = useState('')
-  const [prodi, setProdi]                 = useState('')
-  const [namaDosen, setNamaDosen]         = useState(userName)
-  const [software, setSoftware]           = useState('')
-  const [jumlahPeserta, setJumlahPeserta] = useState('')
-  const [catatan, setCatatan]             = useState('')
+  const [mataKuliah, setMataKuliah]           = useState('')
+  const [prodi, setProdi]                     = useState('')
+  const [namaDosen, setNamaDosen]             = useState(userName)
+  const [software, setSoftware]               = useState('')
+  const [jumlahPeserta, setJumlahPeserta]     = useState('')
+  const [catatan, setCatatan]                 = useState('')
+  const [jenisKegiatan, setJenisKegiatan]     = useState('KUL')
+  const [namaLab, setNamaLab]                 = useState('Laboratorium Komputer')
 
   // Step 2
   const [hari, setHari]               = useState('Senin')
@@ -223,6 +240,8 @@ export default function BookingForm({ userName }: { userName: string }) {
         mingguMulai: Number(mingguMulai),
         recurring,
         totalMinggu: recurring ? Number(totalMinggu) : 1,
+        jenisKegiatan,
+        namaLab,
       }),
     })
     const data = await res.json()
@@ -242,6 +261,8 @@ export default function BookingForm({ userName }: { userName: string }) {
     { label: 'Mata Kuliah',     value: mataKuliah },
     { label: 'Program Studi',   value: prodi },
     { label: 'Nama Dosen',      value: namaDosen },
+    { label: 'Jenis Kegiatan',  value: JENIS_KEGIATAN.find(j => j.kode === jenisKegiatan)?.label ?? jenisKegiatan },
+    { label: 'Laboratorium',    value: namaLab },
     { label: 'Software',        value: software },
     { label: 'Jumlah Peserta',  value: jumlahPeserta ? `${jumlahPeserta} orang` : '–' },
     ...(catatan.trim() ? [{ label: 'Catatan', value: catatan }] : []),
@@ -318,6 +339,21 @@ export default function BookingForm({ userName }: { userName: string }) {
               <div style={{ marginBottom: '14px' }}>
                 <label style={labelStyle}>Jumlah Peserta</label>
                 <input type="number" min="1" value={jumlahPeserta} onChange={e => setJumlahPeserta(e.target.value)} placeholder="cth. 30" {...fp('jumlahPeserta')} />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                <div>
+                  <label style={labelStyle}>Jenis Kegiatan</label>
+                  <select value={jenisKegiatan} onChange={e => setJenisKegiatan(e.target.value)} style={selectBaseStyle}>
+                    {JENIS_KEGIATAN.map(j => <option key={j.kode} value={j.kode}>{j.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Laboratorium</label>
+                  <select value={namaLab} onChange={e => setNamaLab(e.target.value)} style={selectBaseStyle}>
+                    {NAMA_LAB_LIST.map(l => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                </div>
               </div>
 
               <div>

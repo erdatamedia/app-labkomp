@@ -18,6 +18,34 @@ function formatDateLong(d: Date) {
   })
 }
 
+function TTEBox({ tanggalSurat, nomorSurat }: { tanggalSurat: Date; nomorSurat: string }) {
+  return (
+    <div className="tte-box" style={{
+      border: '1px solid #E2E8F0',
+      borderRadius: '8px',
+      padding: '10px 14px',
+      background: '#F0FDF4',
+      display: 'inline-block',
+      marginBottom: '8px',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+        <span style={{ fontSize: '10px', color: '#166534', fontWeight: 500 }}>
+          Telah ditandatangani secara elektronik
+        </span>
+      </div>
+      <div style={{ fontSize: '10px', color: '#4ADE80', marginBottom: '2px' }}>
+        pada {formatDateLong(tanggalSurat)}
+      </div>
+      <div style={{ fontSize: '10px', color: '#166534', fontFamily: 'monospace' }}>
+        Nomor: {nomorSurat}
+      </div>
+    </div>
+  )
+}
+
 export default async function SuratPage({
   params,
 }: {
@@ -52,15 +80,61 @@ export default async function SuratPage({
     ? formatDateLong(booking.tanggalSurat)
     : formatDateLong(new Date())
 
+  const ttdSpaceHeight = booking.isTTE ? '16px' : '48px'
+
   return (
     <>
       <style>{`
         @media print {
-          body { margin: 0; font-size: 12px; }
-          .no-print { display: none !important; }
-          .surat-wrap { padding: 0 !important; }
+          .no-print,
+          nav,
+          header,
+          footer,
+          .navbar,
+          button {
+            display: none !important;
+          }
+
+          @page {
+            size: A4;
+            margin: 2cm 2.5cm;
+          }
+
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+
+          .surat-wrap {
+            padding: 0 !important;
+            background: white !important;
+            min-height: unset !important;
+          }
+
+          .surat-container {
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+          }
+
           table { page-break-inside: avoid; }
-          * { font-size: 12px; }
+
+          .ttd-grid {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+          }
+
+          .tte-box {
+            border: 1px solid #000 !important;
+            background: #f9f9f9 !important;
+            -webkit-print-color-adjust: exact;
+          }
         }
       `}</style>
 
@@ -88,7 +162,7 @@ export default async function SuratPage({
         minHeight: '100vh', background: '#F8FAFC',
         padding: '40px 24px',
       }}>
-        <div style={{
+        <div className="surat-container" style={{
           maxWidth: '720px', margin: '0 auto',
           background: '#fff',
           border: '1px solid #E2E8F0',
@@ -96,8 +170,8 @@ export default async function SuratPage({
           padding: '48px 56px',
           boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
           fontFamily: '"Times New Roman", Times, serif',
-          fontSize: '13px',
-          lineHeight: 1.6,
+          fontSize: '12px',
+          lineHeight: 1.8,
           color: '#0F172A',
         }}>
 
@@ -108,7 +182,7 @@ export default async function SuratPage({
                 <img
                   src={logoUrl}
                   alt="Logo"
-                  style={{ height: '50px', width: 'auto', flexShrink: 0, objectFit: 'contain' }}
+                  style={{ height: '60px', width: 'auto', flexShrink: 0, objectFit: 'contain' }}
                 />
               ) : (
                 <div style={{
@@ -120,8 +194,8 @@ export default async function SuratPage({
                   LOGO
                 </div>
               )}
-              <div>
-                <div style={{ fontSize: '15px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '14px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   {namaInstansi}
                 </div>
                 <div style={{ fontSize: '13px', marginTop: '2px' }}>
@@ -138,14 +212,18 @@ export default async function SuratPage({
               </div>
             </div>
 
-            {/* Garis kop */}
-            <div style={{ borderTop: '2.5px solid #0F172A', marginTop: '10px' }} />
+            {/* Garis kop ganda */}
+            <div style={{ borderTop: '3px solid #0F172A', marginTop: '10px' }} />
             <div style={{ borderTop: '1px solid #0F172A', marginTop: '2px' }} />
           </div>
 
           {/* JUDUL */}
-          <div style={{ textAlign: 'center', margin: '20px 0 24px', fontWeight: 700, fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Surat Persetujuan Penggunaan Laboratorium Komputer
+          <div style={{
+            textAlign: 'center', margin: '16px 0',
+            fontWeight: 700, fontSize: '13px',
+            textTransform: 'uppercase', letterSpacing: '0.04em',
+          }}>
+            Surat Persetujuan Penggunaan {booking.namaLab ?? 'Laboratorium Komputer'}
           </div>
 
           {/* NOMOR & PERIHAL */}
@@ -154,24 +232,24 @@ export default async function SuratPage({
               {[
                 ['Nomor',    booking.nomorSurat ?? '—'],
                 ['Lampiran', '—'],
-                ['Perihal',  'Persetujuan Penggunaan Laboratorium Komputer'],
+                ['Perihal',  `Persetujuan Penggunaan ${booking.namaLab ?? 'Laboratorium Komputer'}`],
               ].map(([label, value]) => (
                 <tr key={label}>
-                  <td style={{ width: '90px', verticalAlign: 'top', paddingBottom: '2px' }}>{label}</td>
-                  <td style={{ width: '16px', verticalAlign: 'top', paddingBottom: '2px' }}>:</td>
-                  <td style={{ verticalAlign: 'top', paddingBottom: '2px' }}>{value}</td>
+                  <td style={{ width: '120px', verticalAlign: 'top', paddingBottom: '2px', fontSize: '12px', lineHeight: 2 }}>{label}</td>
+                  <td style={{ width: '16px', verticalAlign: 'top', paddingBottom: '2px', fontSize: '12px', lineHeight: 2 }}>:</td>
+                  <td style={{ verticalAlign: 'top', paddingBottom: '2px', fontSize: '12px', lineHeight: 2 }}>{value}</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
           {/* TANGGAL */}
-          <div style={{ textAlign: 'right', marginBottom: '20px' }}>
+          <div style={{ textAlign: 'right', marginBottom: '20px', fontSize: '12px' }}>
             Malang, {tanggal}
           </div>
 
           {/* PENERIMA */}
-          <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '20px', fontSize: '12px' }}>
             <div>Kepada Yth.</div>
             <div>Bapak/Ibu {booking.user.name}</div>
             <div>di Tempat</div>
@@ -179,8 +257,8 @@ export default async function SuratPage({
 
           {/* PEMBUKA */}
           <div style={{ marginBottom: '16px' }}>
-            <p style={{ margin: '0 0 12px', textAlign: 'justify' }}>
-              Dengan hormat, sehubungan dengan permohonan penggunaan Laboratorium Komputer
+            <p style={{ margin: '0 0 12px', textAlign: 'justify', fontSize: '12px', lineHeight: 1.8 }}>
+              Dengan hormat, sehubungan dengan permohonan penggunaan {booking.namaLab ?? 'Laboratorium Komputer'}
               yang diajukan oleh Bapak/Ibu <strong>{booking.user.name}</strong> dari Program
               Studi <strong>{booking.prodi}</strong>, bersama surat ini kami sampaikan bahwa
               permohonan tersebut telah kami terima dan disetujui.
@@ -190,21 +268,21 @@ export default async function SuratPage({
           {/* TABEL DATA BOOKING */}
           <table style={{
             width: '100%', borderCollapse: 'collapse',
-            border: '1px solid #CBD5E1',
+            border: '1px solid #000',
             marginBottom: '20px', fontSize: '12px',
           }}>
             <thead>
-              <tr style={{ background: '#F1F5F9' }}>
+              <tr style={{ background: '#f0f0f0' }}>
                 <th style={{
                   padding: '8px 12px', textAlign: 'left',
-                  border: '1px solid #CBD5E1', fontWeight: 600,
+                  border: '1px solid #000', fontWeight: 600,
                   width: '40%',
                 }}>
                   Keterangan
                 </th>
                 <th style={{
                   padding: '8px 12px', textAlign: 'left',
-                  border: '1px solid #CBD5E1', fontWeight: 600,
+                  border: '1px solid #000', fontWeight: 600,
                 }}>
                   Detail
                 </th>
@@ -221,50 +299,72 @@ export default async function SuratPage({
                 ['Software',      booking.software],
               ].map(([label, value]) => (
                 <tr key={label}>
-                  <td style={{ padding: '8px 12px', border: '1px solid #CBD5E1', fontWeight: 500 }}>
+                  <td style={{ padding: '8px 12px', border: '1px solid #000', fontWeight: 500 }}>
                     {label}
                   </td>
-                  <td style={{ padding: '8px 12px', border: '1px solid #CBD5E1' }}>
+                  <td style={{ padding: '8px 12px', border: '1px solid #000' }}>
                     {value}
                   </td>
                 </tr>
               ))}
               <tr>
-                <td style={{ padding: '8px 12px', border: '1px solid #CBD5E1', fontWeight: 500 }}>
+                <td style={{ padding: '8px 12px', border: '1px solid #000', fontWeight: 500 }}>
                   Status
                 </td>
-                <td style={{ padding: '8px 12px', border: '1px solid #CBD5E1' }}>
-                  <span style={{
-                    background: '#DCFCE7', color: '#166534',
-                    padding: '2px 10px', borderRadius: '4px',
-                    fontWeight: 600, fontSize: '11px',
-                    fontFamily: 'sans-serif', letterSpacing: '0.05em',
-                  }}>
-                    DISETUJUI
-                  </span>
+                <td style={{ padding: '8px 12px', border: '1px solid #000', color: '#166534', fontWeight: 700 }}>
+                  DISETUJUI
                 </td>
               </tr>
             </tbody>
           </table>
 
           {/* PENUTUP */}
-          <p style={{ margin: '0 0 32px', textAlign: 'justify' }}>
+          <p style={{ margin: '0 0 32px', textAlign: 'justify', fontSize: '12px', lineHeight: 1.8 }}>
             Demikian surat persetujuan ini dibuat untuk dapat digunakan sebagaimana mestinya.
             Atas perhatian dan kerjasamanya, kami ucapkan terima kasih.
           </p>
 
-          {/* TANDA TANGAN */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <div style={{ textAlign: 'center', minWidth: '220px' }}>
-              <div style={{ marginBottom: '4px' }}>Malang, {tanggal}</div>
-              <div style={{ fontWeight: 600, marginBottom: '64px' }}>
-                {wd2User?.jabatan ?? 'Wakil Dekan II'},
+          {/* TANDA TANGAN — 2 KOLOM */}
+          <div className="ttd-grid" style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '32px',
+            marginTop: '40px',
+          }}>
+            {/* KOLOM KIRI — Wakil Dekan II */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ marginBottom: '0', fontSize: '12px' }}>
+                Wakil Dekan II Bidang Sumber Daya,
               </div>
-              <div style={{ fontWeight: 700, borderTop: '1px solid #0F172A', paddingTop: '4px' }}>
+              {booking.isTTE && booking.tanggalSurat && booking.nomorSurat && (
+                <TTEBox tanggalSurat={booking.tanggalSurat} nomorSurat={booking.nomorSurat} />
+              )}
+              <div style={{ height: ttdSpaceHeight }} />
+              <div style={{ fontWeight: 600, fontSize: '12px', borderTop: '1px solid #0F172A', paddingTop: '4px' }}>
                 {wd2User?.name ?? '-'}
               </div>
-              <div style={{ fontSize: '12px', marginTop: '2px' }}>
+              <div style={{ fontSize: '11px', marginTop: '2px' }}>
                 NIP. {wd2User?.nip ? formatNip(wd2User.nip) : '—'}
+              </div>
+            </div>
+
+            {/* KOLOM KANAN — Kepala Lab */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ marginBottom: '0', fontSize: '12px' }}>Mengetahui,</div>
+              <div style={{ marginBottom: '8px', fontSize: '12px' }}>
+                {appSettings?.jabatanKepalaLab ?? 'Kepala Laboratorium Komputer'},
+              </div>
+              {booking.isTTE && booking.tanggalSurat && booking.nomorSurat && (
+                <TTEBox tanggalSurat={booking.tanggalSurat} nomorSurat={booking.nomorSurat} />
+              )}
+              <div style={{ height: ttdSpaceHeight }} />
+              <div style={{ fontWeight: 600, fontSize: '12px', borderTop: '1px solid #0F172A', paddingTop: '4px' }}>
+                {appSettings?.namaKepalaLab ?? '________________________'}
+              </div>
+              <div style={{ fontSize: '11px', marginTop: '2px' }}>
+                NIP. {appSettings?.nipKepalaLab
+                  ? formatNip(appSettings.nipKepalaLab)
+                  : '________________________'}
               </div>
             </div>
           </div>
@@ -290,4 +390,3 @@ export default async function SuratPage({
     </>
   )
 }
-

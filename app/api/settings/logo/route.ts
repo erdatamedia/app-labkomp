@@ -35,7 +35,7 @@ export async function POST(req: Request) {
   await mkdir(uploadDir, { recursive: true })
   await writeFile(path.join(uploadDir, 'logo.png'), buffer)
 
-  const logoUrl = '/uploads/logo.png'
+  const logoUrl = `/uploads/logo.png?v=${Date.now()}`
   await prisma.appSettings.upsert({
     where: { id: 'singleton' },
     update: { logoUrl },
